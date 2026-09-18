@@ -65,13 +65,29 @@ export default function VPSDashboard() {
     );
   };
 
+  const getLatestMetric = (metricObj) => {
+    if (!metricObj || !metricObj.usage) return null;
+    const timestamps = Object.keys(metricObj.usage).sort((a, b) => Number(b) - Number(a));
+    if (timestamps.length === 0) return null;
+    return metricObj.usage[timestamps[0]];
+  };
+
   const renderContent = () => {
     if (loading && !data) return <ActivityIndicator size="large" color={c.accent} />;
     if (!data) return <Copy>No data available</Copy>;
 
-    // Hostinger API might return an array if we used the generic endpoint, but the specific ID endpoint usually returns the object directly.
-    // If it's an array, get the first item.
-    const vps = Array.isArray(data) ? data[0] : data;
+    // data actually contains { details, metrics } from the proxy API
+    const vpsDetails = data.details || {};
+    const vps = Array.isArray(vpsDetails) ? vpsDetails[0] : vpsDetails;
+    const metrics = data.metrics || {};
+
+    const latestCpu = getLatestMetric(metrics.cpu_usage);
+    const latestRam = getLatestMetric(metrics.ram_usage);
+    const latestDisk = getLatestMetric(metrics.disk_space);
+
+    const cpuText = latestCpu !== null ? `${latestCpu.toFixed(1)}%` : `${vps.cpus} Cores`;
+    const ramText = latestRam !== null ? `${(latestRam / 1024 / 1024 / 1024).toFixed(1)} GB / ${(vps.memory / 1024).toFixed(1)} GB` : `${(vps.memory / 1024).toFixed(1)} GB`;
+    const diskText = latestDisk !== null ? `${(latestDisk / 1024 / 1024 / 1024).toFixed(1)} GB / ${(vps.disk / 1024).toFixed(1)} GB` : `${(vps.disk / 1024).toFixed(1)} GB`;
 
     return (
       <View style={{ gap: S.four }}>
@@ -84,10 +100,19 @@ export default function VPSDashboard() {
           </View>
           <Copy muted>IP: {vps.ipv4?.[0]?.address || 'N/A'}</Copy>
           <View style={{ height: 1, backgroundColor: c.line, marginVertical: S.two }} />
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <View><Copy muted>CPU</Copy><Copy>{vps.cpus} Cores</Copy></View>
-            <View><Copy muted>RAM</Copy><Copy>{(vps.memory / 1024).toFixed(1)} GB</Copy></View>
-            <View><Copy muted>Disk</Copy><Copy>{(vps.disk / 1024).toFixed(1)} GB</Copy></View>
+          <View style={{ gap: S.two }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Copy muted>CPU Usage</Copy>
+              <Copy>{cpuText}</Copy>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Copy muted>RAM Usage</Copy>
+              <Copy>{ramText}</Copy>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Copy muted>Disk Used</Copy>
+              <Copy>{diskText}</Copy>
+            </View>
           </View>
         </View>
 
