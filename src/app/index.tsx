@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Copy, Field, Page, usePalette } from "@/components/workspace-ui";
