@@ -18,7 +18,7 @@ export default function VPSDashboard() {
       const res = await fetch(API_URL);
       if (!res.ok) throw new Error('Failed to fetch');
       const json = await res.json();
-      setData(json.details);
+      setData(json);
     } catch (e) {
       console.error(e);
       Alert.alert('Error', 'Failed to fetch VPS status');
